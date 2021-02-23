@@ -6,7 +6,7 @@
 *.dylib
 
 # sql-scripts
-*.sql-scripts
+sql-scripts
 
 # Test binary, built with `go test -c`
 *.test
