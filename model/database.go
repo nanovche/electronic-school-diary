@@ -2,6 +2,7 @@ package model
 
 import (
 	"electronic-school-diary/env"
+	entities "electronic-school-diary/model/entities"
 	"fmt"
 
 	"github.com/go-gorm/mysql"
@@ -19,5 +20,5 @@ func NewDB() (*gorm.DB, error) {
 }
 
 func Migrate(env *env.Env) {
-	env.Db.AutoMigrate(&Teacher{})
+	env.Db.AutoMigrate(&entities.Mark{})
 }
