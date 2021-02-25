@@ -1,17 +1,11 @@
 package env
 
-import (
-	"html/template"
-	"log"
+// import (
+// 	"html/template"
+// 	"log"
 
-	"gorm.io/gorm"
-)
-
-type Env struct {
-	Db        *gorm.DB
-	Logger    *log.Logger
-	Templates *template.Template
-}
+// 	"gorm.io/gorm"
+// )
 
 // func (env *Env) InitDB() error {
 // 	var err error
