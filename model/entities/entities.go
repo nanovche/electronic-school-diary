@@ -1,6 +1,16 @@
 package model
 
+import "gorm.io/gorm"
+
 // "gorm.io/gorm"
+
+type Teacher struct {
+	gorm.Model
+	Email     string
+	Password  string
+	FirstName string
+	LastName  string
+}
 
 type Student struct {
 	Student_ID uint `gorm:"primaryKey"`
