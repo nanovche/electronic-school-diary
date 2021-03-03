@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>assess-student</title>
+</head>
+<body>
+<form  method="post">
+    <div class="container">
+            <label for="students"><b>Избери ученик</b></label>
+                <select id="students" name="studentName">
+                    {{range $index, $value := .}}
+                        {{if eq $index 0}}
+                            {{range $value}}
+                                <option>{{.}}</option>
+                            {{end}}
+                        {{end}}
+                    {{end}}
+                </select>
+
+            <label for="marks"><b>Избери оценка:</b></label>
+                <select id="marks" name="markValue">
+                    {{range $index, $value := .}}
+                        {{if eq $index 1}}
+                            {{range $value}}
+                                 <option>{{.}}</option>
+                            {{end}}
+                        {{end}}
+                    {{end}}
+                </select>
+
+        <label for="subjects"><b>Избери предмет:</b></label>
+            <select id="subjects" name="subjectTitle">
+                {{range $index, $value := .}}
+                    {{if eq $index 2}}
+                        {{range $value}}
+                             <option>{{.}}</option>
+                        {{end}}
+                    {{end}}
+                {{end}}
+            </select>
+
+        <label for="teacherName"><b>Teacher</b></label>
+        <input type="text" id="teacherName" name="teacherName" required>
+
+        <button type="submit">OK</button>
+        <label>
+            <input type="checkbox" checked="checked" name="remember"> Remember me
+        </label>
+    </div>
+
+    <div class="container" style="background-color:#f1f1f1">
+        <button type="button" class="cancelbtn">Cancel</button>
+        <span class="psw">Forgot <a href="#">password?</a></span>
+    </div>
+</form>
+</body>
+</html>

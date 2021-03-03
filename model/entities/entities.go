@@ -1,11 +1,26 @@
 package model
 
-import "gorm.io/gorm"
+import "time"
 
 // "gorm.io/gorm"
 
+type Administrator struct {
+	Administrator_ID uint `gorm:"primaryKey"`
+	FirstName  string
+	LastName   string
+}
+
 type Teacher struct {
-	gorm.Model
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Email     string
+	Password  string
+	FirstName string
+	LastName  string
+}
+
+type Parent struct {
+	Parent_ID uint
 	Email     string
 	Password  string
 	FirstName string
@@ -30,4 +45,10 @@ type Mark struct {
 	Teacher_ID uint `gorm:"foreignKey:teacher_ID"`
 	Subject_ID uint `gorm:"foreignKey:subject_id"`
 	Value      int
+}
+
+type Teacher_Subject struct{
+	Teacher_Subject_ID uint `gorm:"primaryKey"`
+	Subject_ID uint `gorm:"foreignKey:subject_id"`
+	Teacher_ID uint `gorm:"foreignKey:teacher_ID"`
 }
