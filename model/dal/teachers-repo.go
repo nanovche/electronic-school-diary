@@ -4,11 +4,15 @@ import (
 	model "electronic-school-diary/model/entities"
 	"fmt"
 	"gorm.io/gorm"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type IRepositoryTeacher interface {
 	GetTeacherIDByName(teacherName string) (teacherID uint, err error)
 	GetTeacherSubjects(teacherID int) (subjects []model.Subject, err error)
+	GetClassesForToday() ([]string, error)
 }
 
 type RepositoryTeacherImpl struct {
@@ -54,6 +58,32 @@ func (rt RepositoryTeacherImpl) GetTeacherSubjects(teacherID int) (subjects []mo
 	}
 
 	return
+}
+
+func (rt RepositoryTeacherImpl) GetClassesForToday() ([]string, error) {
+
+	current_date := time.Now()
+	rows, err := rt.db.Where("weekday_classes.date_recorded = ?", current_date.Format("2006-01-02")).
+		Table("weekday_classes").
+		Select("weekday_classes.cons_class, subjects.title").
+		Joins("JOIN subjects on subjects.subject_id = weekday_classes.subject_id").Rows()
+	if err != nil {
+		return nil, fmt.Errorf("error retrieveing records for current date")
+	}
+
+	//join(int to string, initalize array)
+	var subjectsForThisDay []string
+	for rows.Next() {
+		var cons_class int
+		var subjectTitle string
+		err = rows.Scan(&cons_class, &subjectTitle); if err != nil {
+			return nil, fmt.Errorf("error scanning subjects for the specified date")
+		}
+		consecutiveClass := strings.Join([]string{strconv.Itoa(cons_class), subjectTitle}, ". ")
+		subjectsForThisDay = append(subjectsForThisDay, consecutiveClass)
+	}
+
+	return subjectsForThisDay, err
 }
 
 

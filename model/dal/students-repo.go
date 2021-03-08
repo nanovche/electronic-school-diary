@@ -4,7 +4,6 @@ import (
 	model "electronic-school-diary/model/entities"
 	"fmt"
 	"gorm.io/gorm"
-	"strings"
 )
 
 type IStudentRepository interface {
@@ -22,7 +21,7 @@ func NewStudentRepositoryImpl(db *gorm.DB) IStudentRepository{
 
 func(sr StudentRepositoryImpl) GetAllStudents() (students []model.Student, err error) {
 
-	res := sr.db.Find(&model.Student{})
+	res := sr.db.Select("*").Table("students")
 	if res.Error != nil {
 		return nil, fmt.Errorf("getting all students query failed: %s", res.Error)
 	}
@@ -33,17 +32,16 @@ func(sr StudentRepositoryImpl) GetAllStudents() (students []model.Student, err e
 	}
 	for rows.Next() {
 		var student_id uint
-		var firstName, lastName string
 		var number uint8
+		var fullName string
 
-		if err := rows.Scan(&student_id, &firstName, &lastName, &number); err != nil {
+		if err := rows.Scan(&student_id, &fullName, &number); err != nil {
 			return nil, fmt.Errorf("error scanning student record: %s ", err)
 		}
 
 		students = append(students, model.Student{
 			Student_ID: student_id,
-			FirstName:  firstName,
-			LastName:   lastName,
+			FullName:  fullName,
 			Number:     number,
 		})
 	}
@@ -52,10 +50,7 @@ func(sr StudentRepositoryImpl) GetAllStudents() (students []model.Student, err e
 
 func (sr StudentRepositoryImpl) GetStudentIDByName(studentName string) (studentID uint, err error) {
 
-	firstAndLastName := strings.Split(studentName, " ")
-	firstName := firstAndLastName[0]
-	lastName := firstAndLastName[1]
-	res := sr.db.Where("first_name = ? AND last_name = ? ", firstName, lastName).Select("student_id").Find(&model.Student{})
+	res := sr.db.Where("full_name = ? ", studentName).Select("student_id").Find(&model.Student{})
 	if res.Error != nil {
 		return 0, fmt.Errorf("failed to query for student_id: %s", res.Error)
 	}

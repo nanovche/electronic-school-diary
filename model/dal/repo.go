@@ -7,6 +7,7 @@ type IRepository interface {
 	GetSubjectRepository() IRepositorySubject
 	GetStudentRepository() IStudentRepository
 	GetMarkRepository() IMarkRepository
+	GetTermRepository() ITermRepository
 }
 
 type RepositoryImpl struct {
@@ -16,6 +17,15 @@ type RepositoryImpl struct {
 	authRepo IRepositoryAuth
 	studentRepo IStudentRepository
 	markRepo IMarkRepository
+	termRepo ITermRepository
+}
+
+func(repo *RepositoryImpl) GetTermRepository() ITermRepository{
+	return repo.termRepo
+}
+
+func(repo *RepositoryImpl) SetTermRepository(termRepo ITermRepository) {
+	repo.termRepo = termRepo
 }
 
 func(repo *RepositoryImpl) GetMarkRepository() IMarkRepository{
