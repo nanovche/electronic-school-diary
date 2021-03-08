@@ -1,0 +1,111 @@
+{{template "base" .}}
+{{define "title"}}ocenki na uchenik{{end}}
+{{define "main"}}
+<div class="container-fluid text-center">
+    <div class="row content">
+        <div class="col-sm-2 sidenav">
+            <p><a href="#">Link</a></p>
+            <p><a href="#">Link</a></p>
+            <p><a href="#">Link</a></p>
+        </div>
+        <div class="col-sm-10 text-left">
+            <table class="table table-condensed table-bordered table-hover">
+                <thead>
+                    <tr>
+                        {{range $k1, $v1 := .}}
+                        <th>{{$k1}}</th>
+                    </tr>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Оценка</th>
+                        <th>Действие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $k2, $v2 := $v1}}
+                        <tr>
+                            <form onsubmit=updateMark(this)>
+                            {{range $k3, $v3 := $v2}}
+                                <td>
+                                    <label>
+                                        {{if eq $k3 0 }}
+                                            <input  type="date" value="{{$v3}}">
+                                        {{else if eq $k3 1}}
+                                            <select class="{{$k3}}">
+                                                <option>{{$v3}}</option>
+                                            </select>
+                                        {{end}}
+                                    </label>
+                                </td>
+                            {{end}}
+                                <td>
+                                    <input type="submit" class="btn btn-success" value="Запази промени">
+                                    <button onclick=deleteMark(this) type="button" class="btn btn-danger">Изтрий оценка</button>
+                                </td>
+                            </form>
+                        </tr>
+
+                    {{end}}
+                        {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    function separateData() {
+        let optionElements = document.getElementsByTagName("option")
+        for (let i = 0; i < optionElements.length; i++) {
+            let markPlusDigitStr = optionElements[i].innerHTML
+            let markPlusDigitArr = markPlusDigitStr.split(".")
+            optionElements[i].innerHTML = markPlusDigitArr[0]
+            optionElements[i].setAttribute("data-target", markPlusDigitArr[1])
+        }
+    }
+
+    function updateMark(element) {
+
+        let dateAndMark = element.elements
+        let markID = dateAndMark[1].firstElementChild.getAttribute("data-target")
+        let urlEncodedDataPairs = [];
+        urlEncodedDataPairs.push(encodeURIComponent("markID") + "=" + encodeURIComponent(markID));
+        urlEncodedDataPairs.push(encodeURIComponent("date") + "=" + encodeURIComponent(dateAndMark[0].value));
+        urlEncodedDataPairs.push(encodeURIComponent("mark") + "=" + dateAndMark[1].value)
+        let urlEncodedData = urlEncodedDataPairs.join( '&' ).replace( /%20/g, '+' );
+
+        xhr = new XMLHttpRequest();
+        xhr.open("PUT", "/update-student-mark", false);
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhr.send(urlEncodedData)
+    }
+    function deleteMark(button) {
+
+        let markID = button.parentElement.previousElementSibling.firstElementChild.lastElementChild.firstElementChild.getAttribute("data-target")
+        let urlEncodedDataPairs = [];
+        urlEncodedDataPairs.push(encodeURIComponent("markID") + "=" + encodeURIComponent(markID));
+        let urlEncodedData = urlEncodedDataPairs.join( '&' ).replace( /%20/g, '+' );
+
+        xhr = new XMLHttpRequest();
+        xhr.open("DELETE", "/update-student-mark", false);
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhr.send(urlEncodedData)
+    }
+    function insertMarkValues() {
+        separateData()
+        marks = ["Слаб", "Среден", "Добър", "Много Добър", "Отличен"]
+        listOfSelectTags = document.getElementsByClassName("1");
+        for (let i = 0; i < listOfSelectTags.length; i++) {
+            currentSelectTag = listOfSelectTags[i];
+            mark = currentSelectTag[0].innerHTML
+            for (let j = 0; j < 5; j++) {
+                if (marks[j] !== mark) {
+                    optionNode = document.createElement("option");
+                    newMarkVal = document.createTextNode(marks[j])
+                    optionNode.appendChild(newMarkVal)
+                    currentSelectTag.appendChild(optionNode)
+                }
+            }
+        }
+    }
+</script>
+{{end}}

@@ -1,0 +1,17 @@
+{{template "base"}}
+{{define "title"}}oceni student{{end}}
+{{define "main"}}
+<div>
+    <form  method="post">
+        <div class="container">
+            <label for="students"><b>Избери ученик</b></label>
+            <select id="students" name="studentName">
+                {{range .}}
+                    <option>{{.}}</option>
+                {{end}}
+            </select>
+            <input type="submit" value="Submit" >
+        </div>
+    </form>
+</div>
+{{end}}

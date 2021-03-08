@@ -1,18 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>assess-student</title>
-</head>
-<body>
+{{template "base"}}
+{{define "title"}} oceni student{{end}}
+{{define "main"}}
 <form  method="post">
     <div class="container">
             <label for="students"><b>Избери ученик</b></label>
@@ -48,6 +36,9 @@
                 {{end}}
             </select>
 
+        <label for="date">Избери дата:</label>
+        <input type="date" id="date" name="date" min = "2020-09-15" max = "2021-01-31" >
+
         <label for="teacherName"><b>Teacher</b></label>
         <input type="text" id="teacherName" name="teacherName" required>
 
@@ -62,5 +53,16 @@
         <span class="psw">Forgot <a href="#">password?</a></span>
     </div>
 </form>
-</body>
-</html>
+<script>
+    const picker = document.getElementById('date');
+    picker.setAttribute()
+    picker.addEventListener('input', function(e){
+        var day = new Date(this.value).getUTCDay();
+        if([6,0].includes(day)){
+            e.preventDefault();
+            this.value = '';
+            alert('Изберете делничен ден');
+        }
+    });
+</script>
+{{end}}
