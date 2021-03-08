@@ -33,6 +33,7 @@ func main() {
 	studentRepo := dal.NewStudentRepositoryImpl(db)
 	markRepo := dal.NewMarkRepository(db)
 	subjectRepo := dal.NewSubjectRepository(db)
+	termRepo := dal.NewTermRepository(db)
 
 	//adding repos to repository container
 	repo := &dal.RepositoryImpl{}
@@ -42,6 +43,7 @@ func main() {
 	repo.SetMarkRepository(markRepo)
 	repo.SetStudentRepository(studentRepo)
 	repo.SetSubjectRepository(subjectRepo)
+	repo.SetTermRepository(termRepo)
 
 	errorLogger := loggerutils.InitLogger(loggerutils.ErrorLoggerFileName, loggerutils.Error.String())
 	eventLogger := loggerutils.InitLogger(loggerutils.EventLoggerFileName, loggerutils.Event.String())
@@ -51,7 +53,9 @@ func main() {
 
 	//instantiating service and controller (teacher)
 	teacherService := service.NewTeacherService(repo)
-	teacherController := c.NewTeacherController(teacherService)
+	studentService := service.NewStudentService(repo)
+	markService := service.NewMarkService(repo)
+	teacherController := c.NewTeacherController(teacherService, studentService, markService)
 
 	//add controllers to main controller
 	cntrl.SetTeacherController(teacherController)
@@ -79,6 +83,10 @@ func(app *application) launch() {
 	app.mux.HandleFunc("/login", app.cntrl.LoginHandler)
 	app.mux.HandleFunc("/logout", app.cntrl.LogoutHandler)*/
 	app.mux.HandleFunc("/assess-student", app.cntrl.GetTeacherController().AddMarkHandler)
+	app.mux.HandleFunc("/update-student-mark", app.cntrl.GetTeacherController().PresentFormMarkHandler).Methods("GET")
+	app.mux.HandleFunc("/update-student-mark", app.cntrl.GetTeacherController().ReadFormDataMarkHandler).Methods("POST")
+	app.mux.HandleFunc("/update-student-mark", app.cntrl.GetTeacherController().UpdateMarkHandler).Methods("PUT")
+	app.mux.HandleFunc("/update-student-mark", app.cntrl.GetTeacherController().DeleteMarkHandler).Methods("DELETE")
 	if err := app.server.ListenAndServe(); err != nil {
 		app.cntrl.ErrorLogger.Fatalln(err)
 	}
