@@ -1,4 +1,4 @@
-package passwordutils
+package utils
 
 import (
 	"fmt"
@@ -24,4 +24,3 @@ func PasswordsAreEqual(rawFormPassword, hashedPassword string) bool {
 	}
 	return true
 }
-

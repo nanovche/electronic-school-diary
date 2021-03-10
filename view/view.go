@@ -8,7 +8,7 @@ import (
 )
 
 func LayoutFiles() []string {
-	files, err := filepath.Glob("templates/layouts/*.tmpl")
+	files, err := filepath.Glob("templates/layout/*.html")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -18,9 +18,6 @@ func LayoutFiles() []string {
 type View struct {
 	Login Page
 	Register Page
-	RateStudent Page
-	PresentUpdateStudentOptions Page
-	UpdateDeleteStudentMark Page
 }
 
 type Page struct {

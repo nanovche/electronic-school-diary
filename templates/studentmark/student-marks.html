@@ -22,6 +22,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                <!--put more tds-->
                     {{range $k2, $v2 := $v1}}
                         <tr>
                             <form onsubmit=updateMark(this)>
@@ -34,17 +35,16 @@
                                             <select class="{{$k3}}">
                                                 <option>{{$v3}}</option>
                                             </select>
+                                        {{else if eq $k3 2 }}
+                                            <input type="hidden" data-mark-id="{{$v3}}" >
                                         {{end}}
                                     </label>
-                                </td>
                             {{end}}
-                                <td>
-                                    <input type="submit" class="btn btn-success" value="Запази промени">
+                                    <button type="submit" class="btn btn-success"> Запази промени </button>
                                     <button onclick=deleteMark(this) type="button" class="btn btn-danger">Изтрий оценка</button>
                                 </td>
                             </form>
                         </tr>
-
                     {{end}}
                         {{end}}
                 </tbody>
@@ -53,24 +53,15 @@
     </div>
 </div>
 <script>
-    function separateData() {
-        let optionElements = document.getElementsByTagName("option")
-        for (let i = 0; i < optionElements.length; i++) {
-            let markPlusDigitStr = optionElements[i].innerHTML
-            let markPlusDigitArr = markPlusDigitStr.split(".")
-            optionElements[i].innerHTML = markPlusDigitArr[0]
-            optionElements[i].setAttribute("data-target", markPlusDigitArr[1])
-        }
-    }
-
     function updateMark(element) {
 
-        let dateAndMark = element.elements
-        let markID = dateAndMark[1].firstElementChild.getAttribute("data-target")
+        let input = element.elements
+
         let urlEncodedDataPairs = [];
-        urlEncodedDataPairs.push(encodeURIComponent("markID") + "=" + encodeURIComponent(markID));
-        urlEncodedDataPairs.push(encodeURIComponent("date") + "=" + encodeURIComponent(dateAndMark[0].value));
-        urlEncodedDataPairs.push(encodeURIComponent("mark") + "=" + dateAndMark[1].value)
+
+        urlEncodedDataPairs.push(encodeURIComponent("mark_id") + "=" + encodeURIComponent(input[2].getAttribute("data-mark-id")));
+        urlEncodedDataPairs.push(encodeURIComponent("new_date") + "=" + encodeURIComponent(input[0].value));
+        urlEncodedDataPairs.push(encodeURIComponent("mark") + "=" + input[1].value)
         let urlEncodedData = urlEncodedDataPairs.join( '&' ).replace( /%20/g, '+' );
 
         xhr = new XMLHttpRequest();
@@ -80,9 +71,10 @@
     }
     function deleteMark(button) {
 
-        let markID = button.parentElement.previousElementSibling.firstElementChild.lastElementChild.firstElementChild.getAttribute("data-target")
+        markId = button.previousElementSibling.previousElementSibling.lastElementChild.getAttribute("data-mark-id")
+
         let urlEncodedDataPairs = [];
-        urlEncodedDataPairs.push(encodeURIComponent("markID") + "=" + encodeURIComponent(markID));
+        urlEncodedDataPairs.push(encodeURIComponent("markId") + "=" + encodeURIComponent(markId));
         let urlEncodedData = urlEncodedDataPairs.join( '&' ).replace( /%20/g, '+' );
 
         xhr = new XMLHttpRequest();
@@ -90,22 +82,6 @@
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         xhr.send(urlEncodedData)
     }
-    function insertMarkValues() {
-        separateData()
-        marks = ["Слаб", "Среден", "Добър", "Много Добър", "Отличен"]
-        listOfSelectTags = document.getElementsByClassName("1");
-        for (let i = 0; i < listOfSelectTags.length; i++) {
-            currentSelectTag = listOfSelectTags[i];
-            mark = currentSelectTag[0].innerHTML
-            for (let j = 0; j < 5; j++) {
-                if (marks[j] !== mark) {
-                    optionNode = document.createElement("option");
-                    newMarkVal = document.createTextNode(marks[j])
-                    optionNode.appendChild(newMarkVal)
-                    currentSelectTag.appendChild(optionNode)
-                }
-            }
-        }
-    }
+
 </script>
 {{end}}

@@ -2,10 +2,8 @@ package dal
 
 import (
 	model "electronic-school-diary/model/entities"
-	"electronic-school-diary/service/utils"
 	"fmt"
 	"gorm.io/gorm"
-	"strconv"
 	"time"
 )
 
@@ -54,19 +52,19 @@ func (mr MarkRepositoryImpl) GetMarksByStudentIDTeacherID(studentID, teacherID u
 
 	markData := make(map[string][][]interface{})
 	for rows.Next(){
-		var markID int
 		var subjectTitle string
-		var markValue int
+		var markID int
 		var date time.Time
+		var markValue int
 		err = rows.Scan(&date, &subjectTitle, &markValue, &markID); if err != nil {
 			return nil, fmt.Errorf("failed to scan mark record")
 		}
 
-		marks := utils.GetMarksMappedDigitToWord()
-		mark := marks[markValue]
-		mark = mark + "." + strconv.Itoa(markID)
-		markData[subjectTitle] = append(markData[subjectTitle], []interface{}{date.Format("2006-01-02"), mark})
+		markData[subjectTitle] = append(markData[subjectTitle], []interface{}{date, markValue, markID})
+
 	}
+
+
 	return markData, nil
 }
 

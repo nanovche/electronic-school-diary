@@ -6,13 +6,12 @@ import (
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type IRepositoryTeacher interface {
 	GetTeacherIDByName(teacherName string) (teacherID uint, err error)
 	GetTeacherSubjects(teacherID int) (subjects []model.Subject, err error)
-	GetClassesForToday() ([]string, error)
+	GetClassesForToday(/*name string*/) ([]string, error)
 }
 
 type RepositoryTeacherImpl struct {
@@ -60,10 +59,10 @@ func (rt RepositoryTeacherImpl) GetTeacherSubjects(teacherID int) (subjects []mo
 	return
 }
 
-func (rt RepositoryTeacherImpl) GetClassesForToday() ([]string, error) {
+func (rt RepositoryTeacherImpl) GetClassesForToday(/*name string*/) ([]string, error) {
 
-	current_date := time.Now()
-	rows, err := rt.db.Where("weekday_classes.date_recorded = ?", current_date.Format("2006-01-02")).
+	//current_date := utils.DateToString(time.Now())
+	rows, err := rt.db.Where("weekday_classes.date_recorded = ?", "2021-03-04").
 		Table("weekday_classes").
 		Select("weekday_classes.cons_class, subjects.title").
 		Joins("JOIN subjects on subjects.subject_id = weekday_classes.subject_id").Rows()

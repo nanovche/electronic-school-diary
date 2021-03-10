@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"electronic-school-diary/loggerutils"
 	"electronic-school-diary/model/dal"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 )
@@ -13,36 +13,34 @@ type Loggers struct {
 	EventLogger  *log.Logger
 }
 
+type Action func(rw http.ResponseWriter, r *http.Request) error
+
 type Controller struct {
-	Loggers
 	repo dal.IRepository
-	teacherController TeacherController
+	Mux *mux.Router
 }
 
-func NewController(repo dal.IRepository, loggers []*log.Logger) *Controller {
+func (c *Controller) Perform(a Action) func(rw http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := a(w, r); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
 
-	var errorLogger, eventLogger *log.Logger
+func NewController(repo dal.IRepository, router *mux.Router) Controller {
+
+	/*var errorLogger, eventLogger *log.Logger
 	for _, logger := range loggers {
 		if logger.Prefix() == loggerutils.Error.String() {
 			errorLogger = logger
 		} else {
 			eventLogger = logger
 		}
-	}
+	}*/
 
-	lgs := Loggers{errorLogger, eventLogger}
-
-	return &Controller{Loggers : lgs,repo : repo}
+	return Controller{repo: repo, Mux: router}
 }
-
-func(cntrl *Controller) GetTeacherController() TeacherController{
-	return cntrl.teacherController
-}
-
-func(cntrl *Controller) SetTeacherController(teacherController TeacherController) {
-	cntrl.teacherController = teacherController
-}
-
 
 /*func (cntrl *Controller) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 

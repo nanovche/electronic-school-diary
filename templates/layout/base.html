@@ -39,6 +39,24 @@
             .row.content {height:auto;}
         }
     </style>
+    <script>
+        function insertMarkValues() {
+        marks = ["Слаб", "Среден", "Добър", "Много Добър", "Отличен"]
+        listOfSelectTags = document.getElementsByClassName("1");
+        for (let i = 0; i < listOfSelectTags.length; i++) {
+            currentSelectTag = listOfSelectTags[i];
+            mark = currentSelectTag[0].innerHTML
+            for (let j = 0; j < 5; j++) {
+                if (marks[j] !== mark) {
+                    optionNode = document.createElement("option");
+                    newMarkVal = document.createTextNode(marks[j])
+                    optionNode.appendChild(newMarkVal)
+                    currentSelectTag.appendChild(optionNode)
+                }
+            }
+        }
+    }
+    </script>
 </head>
 <body onload=insertMarkValues()>
     <header>

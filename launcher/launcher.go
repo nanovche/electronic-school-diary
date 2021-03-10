@@ -2,7 +2,7 @@ package main
 
 import (
 	c "electronic-school-diary/controller"
-	"electronic-school-diary/loggerutils"
+	//"electronic-school-diary/loggerutils"
 	"electronic-school-diary/model"
 	"electronic-school-diary/model/dal"
 	"electronic-school-diary/service"
@@ -14,7 +14,6 @@ import (
 
 type application struct{
 	server *http.Server
-	mux *mux.Router
 	cntrl *c.Controller
 }
 
@@ -45,51 +44,57 @@ func main() {
 	repo.SetSubjectRepository(subjectRepo)
 	repo.SetTermRepository(termRepo)
 
-	errorLogger := loggerutils.InitLogger(loggerutils.ErrorLoggerFileName, loggerutils.Error.String())
-	eventLogger := loggerutils.InitLogger(loggerutils.EventLoggerFileName, loggerutils.Event.String())
-	cntrl := c.NewController(repo,
-					[]*log.Logger{errorLogger, eventLogger})
-
-
-	//instantiating service and controller (teacher)
-	teacherService := service.NewTeacherService(repo)
-	studentService := service.NewStudentService(repo)
-	markService := service.NewMarkService(repo)
-	teacherController := c.NewTeacherController(teacherService, studentService, markService)
-
-	//add controllers to main controller
-	cntrl.SetTeacherController(teacherController)
-
 	handler := mux.NewRouter()
 	server := &http.Server{
 		Addr: ":8080",
 		Handler:  handler,
 	}
 
+	//errorLogger := loggerutils.InitLogger(loggerutils.ErrorLoggerFileName, loggerutils.Error.String())
+	//eventLogger := loggerutils.InitLogger(loggerutils.EventLoggerFileName, loggerutils.Event.String())
+	cntrl := c.NewController(repo, handler)
+
+	//instantiating service and controller (teacher)
+	teacherService := service.NewTeacherService(repo)
+	studentService := service.NewStudentService(repo)
+	markService := service.NewMarkService(repo)
+	tC := c.NewTeacherController(teacherService, studentService, markService, cntrl)
+
 	application := application{
 		server: server,
-		mux: handler,
-		cntrl: cntrl,
+		cntrl: &cntrl,
 	}
 
-	application.launch()
+	tC.Controller.Mux.HandleFunc("/rate-student", tC.Controller.Perform(tC.AddMarkHandlerGet)).Methods("GET")
+	tC.Controller.Mux.HandleFunc("/rate-student", tC.Controller.Perform(tC.AddMarkHandlerPost)).Methods("POST")
+	tC.Controller.Mux.HandleFunc("/update-student-mark", tC.Controller.Perform(tC.PresentFormMarkHandler)).Methods("GET")
+	tC.Controller.Mux.HandleFunc("/update-student-mark", tC.Controller.Perform(tC.ReadFormDataMarkHandler)).Methods("POST")
+	tC.Controller.Mux.HandleFunc("/update-student-mark", tC.Controller.Perform(tC.UpdateMarkHandler)).Methods("PUT")
+	tC.Controller.Mux.HandleFunc("/update-student-mark", tC.Controller.Perform(tC.DeleteMarkHandler)).Methods("DELETE")
 
+
+	if err := application.server.ListenAndServe(); err != nil {
+		log.Fatalln(err)
+	}
+	//application.cntrl .HandleFunc("/update-student-mark", application.cntrl.Perform))
+	//application.launch()
 }
 
-func(app *application) launch() {
+func(app *application) launch([]c.Controller) {
 
 /*	app.mux.HandleFunc("/", app.cntrl.IndexHandler)
 	app.mux.HandleFunc("/register", app.cntrl.RegisterHandler)
 	app.mux.HandleFunc("/login", app.cntrl.LoginHandler)
 	app.mux.HandleFunc("/logout", app.cntrl.LogoutHandler)*/
-	app.mux.HandleFunc("/assess-student", app.cntrl.GetTeacherController().AddMarkHandler)
+	/*app.mux.HandleFunc("/assess-student", app.cntrl.GetTeacherController().AddMarkHandler)
 	app.mux.HandleFunc("/update-student-mark", app.cntrl.GetTeacherController().PresentFormMarkHandler).Methods("GET")
 	app.mux.HandleFunc("/update-student-mark", app.cntrl.GetTeacherController().ReadFormDataMarkHandler).Methods("POST")
 	app.mux.HandleFunc("/update-student-mark", app.cntrl.GetTeacherController().UpdateMarkHandler).Methods("PUT")
-	app.mux.HandleFunc("/update-student-mark", app.cntrl.GetTeacherController().DeleteMarkHandler).Methods("DELETE")
+	app.mux.HandleFunc("/update-student-mark", app.cntrl.GetTeacherController().DeleteMarkHandler).Methods("DELETE")*/
+/*	app.mux.HandleFunc("/update-student-mark", app.cntrl.Perform)
 	if err := app.server.ListenAndServe(); err != nil {
 		app.cntrl.ErrorLogger.Fatalln(err)
-	}
+	}*/
 }
 
 

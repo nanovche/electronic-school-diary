@@ -10,7 +10,7 @@ import (
 )
 
 type ITeacherService interface{
-	AssessStudent(studentName, teacherName, subjectTitle, markValue string ) error
+	AssessStudent(studentName, teacherName, subjectTitle, markValue, date string ) error
 	GetAllMarksOfStudentByOneTeacher(studentID, teacherID uint) (marks map[string][][]interface{}, err error)
 	GetTeacherIDByName(teacherName string) (teacherID uint, err error)
 	UpdateMark(markID, date, markValue string ) error
@@ -32,7 +32,7 @@ func (ts TeacherServiceImpl) GetIRepository() dal.IRepository {
 	return ts.repo
 }
 
-func (ts TeacherServiceImpl) AssessStudent(studentName, teacherName, subjectTitle, markValue string) error {
+func (ts TeacherServiceImpl) AssessStudent(studentName, teacherName, subjectTitle, markValue, date string) error {
 
 	studentID, err := ts.repo.GetStudentRepository().GetStudentIDByName(studentName)
 	if err != nil {
@@ -47,11 +47,17 @@ func (ts TeacherServiceImpl) AssessStudent(studentName, teacherName, subjectTitl
 		return fmt.Errorf("failed getting teacher id: %s", err)
 	}
 
+	dateAsTime, err := utils.StringToDate(date)
+	if err != nil {
+
+	}
+
 	mark := model.Mark{
 		Student_ID: studentID,
 		Teacher_ID: teacherID,
 		Subject_ID: subjectID,
-		Value:  utils.Mark(markValue).Int(),
+		Value:  utils.StringToIntMarkMapper()[markValue],
+		Inserted_At: dateAsTime,
 	}
 
 	err = ts.repo.GetMarkRepository().InsertMark(mark)
@@ -68,6 +74,24 @@ func (ts TeacherServiceImpl) GetAllMarksOfStudentByOneTeacher(studentID, teacher
 	if err != nil {
 		return nil, fmt.Errorf("failed to obtain marks of student with id %d by teacher with od %d: %s", studentID, teacherID, err)
 	}
+
+	for subj, allMarksData := range marks {
+		for currentMarkDataIndex, singleMarkData := range allMarksData {
+			for i, v := range singleMarkData {
+
+				if i == 0 {
+					v, ok := v.(time.Time); if ok {
+						marks[subj][currentMarkDataIndex][0] = utils.DateToString(v)
+					}
+				} else if i == 1 {
+					v, ok := v.(int); if ok {
+						marks[subj][currentMarkDataIndex][1] = utils.GetIntToStringMarkMapper()[v]
+					}
+				}
+			}
+		}
+	}
+
 	return
 }
 
@@ -83,7 +107,7 @@ func (ts TeacherServiceImpl) UpdateMark(markID, date, markValue string ) error {
 		return fmt.Errorf("failed to convert string to int: %s", err)
 	}
 
-	markValueAsInt := utils.Mark(markValue).Int()
+	markValueAsInt := utils.StringToIntMarkMapper()[markValue]
 	err = ts.repo.GetMarkRepository().UpdateMark(markIDAsInt, markValueAsInt, dateInDateFormat)
 	if err != nil {
 		return fmt.Errorf("Error adding mark: %s", err)
@@ -113,7 +137,3 @@ func (ts TeacherServiceImpl) GetTeacherIDByName(teacherName string) (teacherID u
 	}
 	return
 }
-
-
-
-

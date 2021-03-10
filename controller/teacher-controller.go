@@ -3,31 +3,27 @@ package controller
 import (
 	"electronic-school-diary/service"
 	"electronic-school-diary/service/utils"
+	"electronic-school-diary/view"
 	"fmt"
-	"html/template"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 )
 
 type TeacherController struct {
+	Controller Controller
 	TeacherService service.ITeacherService
 	StudentService service.IStudentService
 	MarkService service.IMarkService
-
 }
 
 func NewTeacherController(teacherService service.ITeacherService,
-	studentService service.IStudentService, markService service.IMarkService) TeacherController {
+	studentService service.IStudentService, markService service.IMarkService, Controller Controller) TeacherController {
 	return TeacherController{TeacherService: teacherService,
-		StudentService: studentService, MarkService: markService}
+		StudentService: studentService, MarkService: markService, Controller: Controller}
 }
 
-func (tc TeacherController) AddMarkHandler(w http.ResponseWriter, r *http.Request) {
-
-	switch r.Method {
-
-		case "GET": {
+func (tc TeacherController) AddMarkHandlerGet(w http.ResponseWriter, r *http.Request) error{
 
 			//get name from jwt -> get id -> get his classes from subjectservice
 			subjects, err := tc.TeacherService.
@@ -35,34 +31,28 @@ func (tc TeacherController) AddMarkHandler(w http.ResponseWriter, r *http.Reques
 				GetTeacherRepository().
 				GetClassesForToday()// should be known since //only teachers will have access to this method
 			if err != nil {
-				//tc.ErrorLogger.Println(err)
 				w.WriteHeader(http.StatusInternalServerError)
-				return
+				return err
 			}
 
 			studentNames, err := tc.StudentService.GetAllStudentNames()
 			if err != nil {
-				//tc.ErrorLogger.Println(err)
 				w.WriteHeader(http.StatusInternalServerError)
-				return
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return err
 			}
 
 			data := make([][]string, 3)
 			data[0] = studentNames
-			data[1] = utils.GetMarksAsSliceOfStrings()
+			data[1] = utils.GetMarksAsWords()
 			data[2] = subjects
 
-			t := template.Must(template.ParseFiles("templates/assess-student.tmpl", "templates/base.tmpl"))
-			if err := t.Execute(w, data); err != nil {
-				//tc.ErrorLogger.Println(err)
-				w.WriteHeader(http.StatusInternalServerError)
-			}
-
 			w.WriteHeader(http.StatusOK)
-			return
-		}
+			return view.MarkStudent.RateStudent.Render(w, data)
+}
 
-		case "POST": {
+func (tc TeacherController) AddMarkHandlerPost(w http.ResponseWriter, r *http.Request) error{
+
 			err := r.ParseForm()
 			if err != nil {
 				//tc.ErrorLogger.Printf("failed parsing form: %s", err)
@@ -73,82 +63,59 @@ func (tc TeacherController) AddMarkHandler(w http.ResponseWriter, r *http.Reques
 			studentName := r.Form.Get("studentName")
 			subjectTitle := r.Form.Get("subjectTitle")
 			teacherName := r.Form.Get("teacherName")
+			date := r.Form.Get("date")
 
-			err = tc.TeacherService.AssessStudent(studentName, teacherName, subjectTitle, markValString)
+			err = tc.TeacherService.AssessStudent(studentName, teacherName, subjectTitle, markValString, date)
 
-			if err != nil {
-				//tc.ErrorLogger.Printf("failed assessing student: %s", err)
-				w.WriteHeader(http.StatusInternalServerError)
-			}
-			t, err := template.ParseFiles("templates/assess-student.tmpl")
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-			}
-			if err = t.Execute(w, struct{}{}); err != nil {
-				//tc.ErrorLogger.Println(err)
-				w.WriteHeader(http.StatusInternalServerError)
-			}
 			w.WriteHeader(http.StatusOK)
-			return
-		}
-	}
+			return view.MarkStudent.RateStudent.Render(w, nil)
 }
 
-func (tc TeacherController) PresentFormMarkHandler(w http.ResponseWriter, r *http.Request) {
+func (tc TeacherController) PresentFormMarkHandler(w http.ResponseWriter, r *http.Request) error {
 
 		studentNames, err := tc.StudentService.GetAllStudentNames()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		t := template.Must(template.ParseFiles("templates/update-student-mark.tmpl", "templates/base.tmpl"))
-		if err := t.Execute(w, studentNames); err != nil {
-			//tc.ErrorLogger.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			return err
 		}
 
 		w.WriteHeader(http.StatusOK)
-		return
+		return view.MarkStudent.PresentUpdateStudentOptions.Render(w, studentNames)
 
 }
 
-func (tc TeacherController) ReadFormDataMarkHandler(w http.ResponseWriter, r *http.Request) {
+func (tc TeacherController) ReadFormDataMarkHandler(w http.ResponseWriter, r *http.Request) error {
 
-		err := r.ParseForm()
-		if err != nil {
-			//tc.ErrorLogger.Printf("failed parsing form: %s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	err := r.ParseForm()
+	if err != nil {
+		//tc.ErrorLogger.Printf("failed parsing form: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 
-		studentName := r.Form.Get("studentName")
-		studentID, err := tc.StudentService.GetStudentIDByName(studentName)
-		if err != nil {
-			//tc.ErrorLogger.Printf("failed assessing student: %s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		//should be resolved by jwt (teachername)
-		teacherID, err := tc.TeacherService.GetTeacherIDByName("Biser")
-		if err != nil {
-			//tc.ErrorLogger.Printf("failed assessing student: %s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		marks, err := tc.TeacherService.GetAllMarksOfStudentByOneTeacher(studentID, teacherID)
-		if err != nil {
-			//tc.ErrorLogger.Printf("failed assessing student: %s", err)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
+	studentName := r.Form.Get("studentName")
+	studentID, err := tc.StudentService.GetStudentIDByName(studentName)
+	if err != nil {
+		//tc.ErrorLogger.Printf("failed assessing student: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	//should be resolved by jwt (teachername)
+	teacherID, err := tc.TeacherService.GetTeacherIDByName("Biser")
+	if err != nil {
+		//tc.ErrorLogger.Printf("failed assessing student: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 
-		t := template.Must(template.ParseFiles("templates/student-marks.tmpl", "templates/base.tmpl"))
-		if err := t.Execute(w, marks); err != nil {
-			//tc.ErrorLogger.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		w.WriteHeader(http.StatusOK)
-		return
+	marks, err := tc.TeacherService.GetAllMarksOfStudentByOneTeacher(studentID, teacherID)
+	if err != nil {
+		//tc.ErrorLogger.Printf("failed assessing student: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
+	return view.MarkStudent.UpdateDeleteStudentMark.Render(w, marks)
+
 }
 
-func (tc TeacherController) UpdateMarkHandler(w http.ResponseWriter, r *http.Request) {
+func (tc TeacherController) UpdateMarkHandler(w http.ResponseWriter, r *http.Request) error {
 
 		defer r.Body.Close() //handle
 		data, err := ioutil.ReadAll(r.Body)
@@ -173,14 +140,15 @@ func (tc TeacherController) UpdateMarkHandler(w http.ResponseWriter, r *http.Req
 		date := xmlReqData[1]
 		mark := xmlReqData[2]
 
-
 		err = tc.TeacherService.UpdateMark(markID, date, mark)
 		if err != nil {
 			fmt.Println(err)
 		}
+
+		return nil
 }
 
-func (tc TeacherController) DeleteMarkHandler(w http.ResponseWriter, r *http.Request) {
+func (tc TeacherController) DeleteMarkHandler(w http.ResponseWriter, r *http.Request) error {
 
 		defer r.Body.Close() //handle
 		data, err := ioutil.ReadAll(r.Body)
@@ -205,5 +173,7 @@ func (tc TeacherController) DeleteMarkHandler(w http.ResponseWriter, r *http.Req
 		if err != nil {
 			fmt.Println(err)
 		}
+
+		return nil
 }
 
